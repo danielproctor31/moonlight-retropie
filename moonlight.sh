@@ -111,7 +111,7 @@ self_update() {
     rm "/home/pi/moonlight.sh"
   fi
 
-  wget "https://github.com/danielproctor31/moonlight-retropie/blob/master/moonlight.sh" --no-check-certificate -O "/home/pi/moonlight.sh"
+  wget "https://raw.githubusercontent.com/danielproctor31/moonlight-retropie/master/moonlight.sh" --no-check-certificate -O "/home/pi/moonlight.sh"
   chown pi:pi "/home/pi/moonlight.sh"
   chmod +x "/home/pi/moonlight.sh"
 
