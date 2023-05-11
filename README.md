@@ -15,7 +15,7 @@ In RetroPie, go to the Command Line and type the following to download the scrip
 wget https://raw.githubusercontent.com/danielproctor31/moonlight-retropie/master/moonlight.sh
 ```
 ```
-sudo chmod +x moonlight.sh
+chmod +x moonlight.sh
 ```
 Then run the script:
 ```

@@ -32,7 +32,7 @@ add_repository() {
 # Create desktop and Steam launch scripts
 create_scripts() {
   echo -e "\nCreate Desktop and Steam Launch Scripts for RetroPie"
-  echo -e "****************************************************\n"
+  echo -e "\n****************************************************\n"
 
   echo -e "Create Ports Folder"
   mkdir -p "$SCRIPT_DIR"
@@ -62,18 +62,18 @@ create_scripts() {
   echo -e "Changing File Permissions"
   chown -R pi:pi "$SCRIPT_DIR"
 
-  echo -e "****************************************************\n"
+  echo -e "\n****************************************************\n"
 }
 
 # Install Moonlight package
 install_moonlight() {
-  echo -e "\nUpdate System"
-  echo -e "*************\n"
+  echo -e "\nInstalling Moonlight"
+  echo -e "************************\n"
 
   apt-get update -y
   apt-get install moonlight-embedded -y
 
-  echo -e "*************\n"
+  echo -e "\n************************\n"
 }
 
 # Pair Moonlight with PC
@@ -86,7 +86,7 @@ pair_moonlight() {
   read -p "Input STEAM PC's IP Address here :`echo $'\n> '`" ip
   sudo -u pi moonlight pair $ip
 
-  echo -e "**********************\n"
+  echo -e "\n**********************\n"
 }
 
 # Remove all Steam launch scripts
@@ -94,11 +94,12 @@ remove_scripts() {
   echo -e "\nRemove All Steam Launch Scripts"
   echo -e "*******************************\n"
 
+  echo -e "Removing Scripts"
   cd "$SCRIPT_DIR"
   rm -f "$DESKTOP_SCRIPT"
   rm -f "$STEAM_SCRIPT"
 
-  echo -e "*******************************\n"
+  echo -e "\n*******************************\n"
 }
 
 # Update the script itself
@@ -115,7 +116,7 @@ self_update() {
   chown pi:pi "/home/pi/moonlight.sh"
   chmod +x "/home/pi/moonlight.sh"
 
-  echo -e "*****************************\n"
+  echo -e "\n*****************************\n"
 
   exec /home/pi/moonlight.sh
 }
@@ -125,14 +126,15 @@ uninstall() {
   echo -e "\nUninstalling Everything"
   echo -e "***********************\n"
 
+  echo -e "Removing Moonlight Keyring and Repository"
   rm -f "/usr/share/keyrings/moonlight-game-streaming-moonlight-embedded-archive-keyring.gpg"
   rm -f "/etc/apt/trusted.gpg.d/moonlight-game-streaming-moonlight-embedded.gpg"
   rm -f "$REPO_FILE"
 
-  apt-get update -y
+  echo -e "Removing Moonlight"
   apt-get purge moonlight-embedded -y
 
-  echo -e "***********************\n"
+  echo -e "\n***********************\n"
 }
 
 # Main menu
@@ -142,10 +144,12 @@ main_menu() {
   echo -e "******************************************************\n"
   echo -e "Select an option:"
   echo -e " * 1: Install"
-  echo -e " * 2: Re-Pair with PC"
-  echo -e " * 3: Update"
-  echo -e " * 4: Uninstall"
-  echo -e " * 5: Exit"
+  echo -e " * 2: Create Scripts"
+  echo -e " * 3: Remove Scripts"
+  echo -e " * 4: Re-Pair with PC"
+  echo -e " * 5: Update"
+  echo -e " * 6: Uninstall"
+  echo -e " * 7: Exit"
 
   read -r NUM
   case $NUM in
@@ -154,23 +158,31 @@ main_menu() {
       install_moonlight
       pair_moonlight
       create_scripts
-	  main_menu
+      main_menu
       ;;
     2)
-      pair_moonlight
+      create_scripts
       main_menu
       ;;
     3)
-      install_moonlight
-	  self_update
-	  main_menu
+      remove_scripts
+      main_menu
       ;;
     4)
-      uninstall
-	  remove_scripts
-	  main_menu
+      pair_moonlight
+      main_menu
       ;;
     5)
+      install_moonlight
+	    self_update
+	    main_menu
+      ;;
+    6)
+      uninstall
+	    remove_scripts
+	    main_menu
+      ;;
+    7)
       exit 0
       ;;
     *)
