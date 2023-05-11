@@ -26,7 +26,7 @@ add_repository() {
     curl -1sLf 'https://dl.cloudsmith.io/public/moonlight-game-streaming/moonlight-embedded/setup.deb.sh' | distro=raspbian codename=$(lsb_release -sc) sudo -E bash
   fi
 
-  echo -e "***************************\n"
+  echo -e "\n***************************\n"
 }
 
 # Create desktop and Steam launch scripts
