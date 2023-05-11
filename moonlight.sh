@@ -1,292 +1,183 @@
 #!/bin/bash
+set -e
 
-echo -e "\n****************************************************************"
-echo -e "Welcome to the Moonlight Installer Script for RetroPie v17.10.07"
-echo -e "****************************************************************\n"
-echo -e "Select an option:"
-echo -e " * 1: Install Moonlight,Pair,Install Scripts,Install Menus"
-echo -e " * 2: Install Launch Scripts"
-echo -e " * 3: Remove Launch Scripts"
-echo -e " * 4: Add 480p Launch Scripts"
-echo -e " * 5: Re Pair Moonlight with PC"
-echo -e " * 6: Exit"
-echo -e " * *: NEW MENU ITEMS *"
-echo -e " * 7: Refresh SYSTEMS Config File"
-echo -e " * 8: Update This Script"
+# Variables
+REPO_FILE="/etc/apt/sources.list.d/moonlight-game-streaming-moonlight-embedded.list"
+SCRIPT_DIR="/home/pi/RetroPie/roms/ports"
+DESKTOP_SCRIPT="$SCRIPT_DIR/Desktop.sh"
+STEAM_SCRIPT="$SCRIPT_DIR/Steam.sh"
 
-read NUM
-case $NUM in
-	1)
-		echo -e "\nPHASE ONE: Add Moonlight to Sources List"
-		echo -e "****************************************\n"
-		
-		if grep -q"deb https://dl.cloudsmith.io/public/moonlight-game-streaming/moonlight-embedded/deb/raspbian $(lsb_release -sc) main" /etc/apt/sources.list; then
-			echo -e "NOTE: Moonlight Source Exists - Skipping"
-		else
-			echo -e "Adding Moonlight to Sources List"
-			echo "deb https://dl.cloudsmith.io/public/moonlight-game-streaming/moonlight-embedded/deb/raspbian $(lsb_release -sc) main" >> /etc/apt/sources.list
-		fi
-		
-		echo -e "\n**** PHASE ONE Complete!!!! ****"
+# Functions
 
-		echo -e "\nPHASE TWO: Fetch and install the GPG key"
-		echo -e "****************************************\n"
-		
-		if [ -f /home/pi/moonlight.key ]
-		then	
-			echo -e "NOTE: GPG Key Exists - Skipping"
-		else		
-			wget https://dl.cloudsmith.io/public/moonlight-game-streaming/moonlight-embedded/gpg.5AEE46706CF0453E.key -O moonlight.key
-			chown pi:pi /home/pi/moonlight.key
-			apt-key add moonlight.key		
-		fi
+# Check if a command exists
+command_exists() {
+  command -v "$1" >/dev/null 2>&1
+}
 
-		echo -e "\n**** PHASE TWO Complete!!!! ****"
+# Add Moonlight repository if it doesn't exist
+add_repository() {
+  echo -e "\nAdding Moonlight Repository"
+  echo -e "***************************\n"
 
-		echo -e "\nPHASE THREE: Update System"
-		echo -e "**************************\n"
-		apt-get update -y
-		echo -e "\n**** PHASE THREE Complete!!!! ****"
-		
-		echo -e "\nPHASE FOUR: Install Moonlight"
-		echo -e "*****************************\n"
-		apt-get install moonlight-embedded -y
-		echo -e "\n**** PHASE FOUR Complete!!!! ****"
-		
-		echo -e "\nPHASE FIVE: Pair Moonlight with PC"
-		echo -e "**********************************\n"
-		echo -e "Once you have input your STEAM PC's IP Address below, you will be given a PIN"
-		echo -e "Input this on the STEAM PC to pair with Moonlight. \n"
-		read -p "Input STEAM PC's IP Address here :`echo $'\n> '`" ip
-		sudo -u pi moonlight pair $ip
-		echo -e "\n**** PHASE FIVE Complete!!!! ****"		
-		
-		echo -e "\nPHASE SIX: Create STEAM Menu for RetroPie"
-		echo -e "*****************************************\n"
-		
-		if [ -f /home/pi/.emulationstation/es_systems.cfg ]
-		then	
-			echo -e "Removing Duplicate Systems File"
-			rm /home/pi/.emulationstation/es_systems.cfg
-		fi
-		
-		echo -e "Copying Systems Config File"
-		cp /etc/emulationstation/es_systems.cfg /home/pi/.emulationstation/es_systems.cfg
-			
-		if grep -q "<platform>steam</platform>" /home/pi/.emulationstation/es_systems.cfg; then
-			echo -e "NOTE: Steam Entry Exists - Skipping"
-		else
-			echo -e "Adding Steam to Systems"
-			sudo sed -i -e 's|</systemList>|  <system>\n    <name>steam</name>\n    <fullname>Steam</fullname>\n    <path>~/RetroPie/roms/moonlight</path>\n    <extension>.sh .SH</extension>\n    <command>bash %ROM%</command>\n    <platform>steam</platform>\n    <theme>steam</theme>\n  </system>\n</systemList>|g' /home/pi/.emulationstation/es_systems.cfg
-		fi
-		echo -e "\n**** PHASE SIX Complete!!!! ****"
+  if [[ -f "$REPO_FILE" ]]; then
+    echo -e "NOTE: Moonlight repository already exists - Skipping"
+  else
+    echo -e "Adding Moonlight to repository"
+    curl -1sLf 'https://dl.cloudsmith.io/public/moonlight-game-streaming/moonlight-embedded/setup.deb.sh' | distro=raspbian codename=$(lsb_release -sc) sudo -E bash
+  fi
 
-		echo -e "\nPHASE SEVEN: Create 1080p+720p Launch Scripts for RetroPie"
-		echo -e "**********************************************************\n"
-		
-		echo -e "Create Script Folder"
-		mkdir -p /home/pi/RetroPie/roms/moonlight
-		cd /home/pi/RetroPie/roms/moonlight
-		
-		echo -e "Create Scripts"
-		if [ -f /home/pi/RetroPie/roms/moonlight/720p30fps.sh ]; then
-			echo -e "NOTE: 720p30fps Exists - Skipping"
-		else
-			echo "#!/bin/bash" > 720p30fps.sh
-			echo "moonlight stream -720 -fps 30 "$ip"" >>  720p30fps.sh
-		fi
-		
-		if [ -f /home/pi/RetroPie/roms/moonlight/720p60fps.sh ]; then
-			echo -e "NOTE: 720p60fps Exists - Skipping"
-		else
-			echo "#!/bin/bash" > 720p60fps.sh
-			echo "moonlight stream -720 -fps 60 "$ip"" >>  720p60fps.sh
-		fi
-		
-		if [ -f /home/pi/RetroPie/roms/moonlight/1080p30fps.sh ]; then
-			echo -e "NOTE: 1080p30fps Exists - Skipping"
-		else
-			echo "#!/bin/bash" > 1080p30fps.sh
-			echo "moonlight stream -1080 -fps 30 "$ip"" >>  1080p30fps.sh
-		fi
-		
-		if [ -f /home/pi/RetroPie/roms/moonlight/1080p60fps.sh ]; then
-			echo -e "NOTE: 1080p60fps Exists - Skipping"
-		else
-			echo "#!/bin/bash" > 1080p60fps.sh
-			echo "moonlight stream -1080 -fps 60 "$ip"" >>  1080p60fps.sh
-		fi
-		
-		echo -e "Make Scripts Executable"
-		chmod +x 720p30fps.sh
-		chmod +x 720p60fps.sh
-		chmod +x 1080p30fps.sh
-		chmod +x 1080p60fps.sh
-		echo -e "\n**** PHASE SEVEN Complete!!!! ****"
+  echo -e "***************************\n"
+}
 
-		echo -e "\nPHASE EIGHT: Making Everything PI Again :)"
-		echo -e "******************************************\n"
-		
-		echo -e "Changing File Permissions"
-		chown -R pi:pi /home/pi/RetroPie/roms/moonlight/
-		chown pi:pi /home/pi/.emulationstation/es_systems.cfg
+# Create desktop and Steam launch scripts
+create_scripts() {
+  echo -e "\nCreate Desktop and Steam Launch Scripts for RetroPie"
+  echo -e "****************************************************\n"
 
-		echo -e "\n**** PHASE EIGHT Complete!!!! ****\n"
-		echo -e "Everything should now be installed and setup correctly."
-		echo -e "To be safe, it's recommended that you perform a reboot now."
-		echo -e "\nIf you don't want to reboot now, press N\n"
-		
-		read -p "Reboot Now (y/n)?" choice
-		case "$choice" in 
-		  y|Y ) shutdown -r now;;
-		  n|N ) cd /home/pi
-		  ./moonlight.sh
-		  ;;
-		  * ) echo "invalid";;
-		esac
-	;;
-	2)
-		echo -e "\nCreate 1080p + 720p Launch Scripts for RetroPie"
-		echo -e "***********************************************\n"
-		
-		echo -e "Create Script Folder"
-		mkdir -p /home/pi/RetroPie/roms/moonlight
-		cd /home/pi/RetroPie/roms/moonlight
-		
-		echo -e "Create Scripts"
-		if [ -f /home/pi/RetroPie/roms/moonlight/720p30fps.sh ]; then
-			echo -e "NOTE: 720p30fps Exists - Skipping"
-		else
-			echo "#!/bin/bash" > 720p30fps.sh
-			echo "moonlight stream -720 -fps 30 "$ip"" >>  720p30fps.sh
-		fi
-		
-		if [ -f /home/pi/RetroPie/roms/moonlight/720p60fps.sh ]; then
-			echo -e "NOTE: 720p60fps Exists - Skipping"
-		else
-			echo "#!/bin/bash" > 720p60fps.sh
-			echo "moonlight stream -720 -fps 60 "$ip"" >>  720p60fps.sh
-		fi
-		
-		if [ -f /home/pi/RetroPie/roms/moonlight/1080p30fps.sh ]; then
-			echo -e "NOTE: 1080p30fps Exists - Skipping"
-		else
-			echo "#!/bin/bash" > 1080p30fps.sh
-			echo "moonlight stream -1080 -fps 30 "$ip"" >>  1080p30fps.sh
-		fi
-		
-		if [ -f /home/pi/RetroPie/roms/moonlight/1080p60fps.sh ]; then
-			echo -e "NOTE: 1080p60fps Exists - Skipping"
-		else
-			echo "#!/bin/bash" > 1080p60fps.sh
-			echo "moonlight stream -1080 -fps 60 "$ip"" >>  1080p60fps.sh
-		fi
-		
-		echo -e "Make Scripts Executable"
-		chmod +x 720p30fps.sh
-		chmod +x 720p60fps.sh
-		chmod +x 1080p30fps.sh
-		chmod +x 1080p60fps.sh
-		
-		echo -e "\n**** 1080p + 720p Launch Scripts Creation Complete!!!! ****"
-		cd /home/pi
-		./moonlight.sh
-	;;
-	3)
-		echo -e "\nRemove All Steam Launch Scripts"
-		echo -e "***********************************\n"
-		cd /home/pi/RetroPie/roms/moonlight
-		rm *
-		
-		echo -e "\n**** Launch Script Removal Complete!!! ****"
-		cd /home/pi
-		./moonlight.sh
-	;;
-	4)  
-		echo -e "\nCreate 480p Launch Scripts for RetroPie"
-		echo -e "*******************************************\n"
-		
-		echo -e "Create Script Folder"
-		mkdir -p /home/pi/RetroPie/roms/moonlight
-		cd /home/pi/RetroPie/roms/moonlight
-		
-		echo -e "Create 480p Scripts"
-		
-		if [ -f /home/pi/RetroPie/roms/moonlight/480p30fps.sh ]; then
-			echo -e "NOTE: 480p30fps Exists - Skipping"
-		else
-			echo "#!/bin/bash" > 480p30fps.sh
-			echo "moonlight stream -width 640 -height 480 -fps 30 "$ip"" >>  480p30fps.sh
-		fi
-				
-		if [ -f /home/pi/RetroPie/roms/moonlight/480p60fps.sh ]; then
-			echo -e "NOTE: 480p60fps Exists - Skipping"
-		else
-			echo "#!/bin/bash" > 480p60fps.sh
-			echo "moonlight stream -width 640 -height 480 -fps 60 "$ip"" >>  480p60fps.sh
-		fi
-		
-		echo -e "Make 480p Scripts Executable"
-		chmod +x 480p30fps.sh
-		chmod +x 480p60fps.sh
-		
-		echo -e "\n**** 480p Launch Scripts Creation Complete!!!!"
-		cd /home/pi
-		./moonlight.sh
-	;;
-	5) 
-		echo -e "\nRe-Pair Moonlight with another PC"
-		echo -e "*********************************\n"
-		
-		echo -e "Once you have input your STEAM PC's IP Address below, you will be given a PIN"
-		echo -e "Input this on the STEAM PC to pair with Moonlight. \n"
-		read -p "Input STEAM PC's IP Address here :`echo $'\n> '`" ip
-		sudo -u pi moonlight pair $ip
-		
-		echo -e "\n**** Re-Pair Process Complete!!!! ****"
-		cd /home/pi
-		./moonlight.sh
-	;;
-	6)  exit 1;;
-	
-	7) 
-		echo -e "\nRefresh RetroPie Systems File"
-		echo -e "*****************************\n"
-		
-		if [ -f /home/pi/.emulationstation/es_systems.cfg ]
-		then	
-			echo -e "Removing Duplicate Systems File"
-			rm /home/pi/.emulationstation/es_systems.cfg
-		fi
-		
-		echo -e "Copying Systems Config File"
-		cp /etc/emulationstation/es_systems.cfg /home/pi/.emulationstation/es_systems.cfg
-			
-		if grep -q "<platform>steam</platform>" /home/pi/.emulationstation/es_systems.cfg; then
-			echo -e "NOTE: Steam Entry Exists - Skipping"
-		else
-			echo -e "Adding Steam to Systems"
-			sudo sed -i -e 's|</systemList>|  <system>\n    <name>steam</name>\n    <fullname>Steam</fullname>\n    <path>~/RetroPie/roms/moonlight</path>\n    <extension>.sh .SH</extension>\n    <command>bash %ROM%</command>\n    <platform>steam</platform>\n    <theme>steam</theme>\n  </system>\n</systemList>|g' /home/pi/.emulationstation/es_systems.cfg
-		fi
-		
-		echo -e "\n**** Refreshing Retropie Systems File Complete!!!! ****"
-		cd /home/pi
-		./moonlight.sh
-	;;
-		
-	8) 
-		echo -e "\nUpdate This Script"
-		echo -e "*****************************\n"
-		
-		if [ -f /home/pi/moonlight.sh ]
-		then	
-			echo -e "Removing Script"
-			rm /home/pi/moonlight.sh
-		fi
-		wget https://techwiztime.com/moonlight.sh --no-check
-		chown pi:pi /home/pi/moonlight.sh
-		chmod +x moonlight.sh
-		./moonlight.sh
-	;;
-	*) echo "INVALID NUMBER!" ;;
-esac
+  echo -e "Create Ports Folder"
+  mkdir -p "$SCRIPT_DIR"
+  cd "$SCRIPT_DIR"
+
+  echo -e "Create Scripts"
+
+  if [[ -f "$DESKTOP_SCRIPT" ]]; then
+    echo -e "NOTE: Desktop script already exists - Skipping"
+  else
+    echo "#!/bin/bash" > "$DESKTOP_SCRIPT"
+    echo "moonlight stream -1080 -fps 60 -app Desktop" >> "$DESKTOP_SCRIPT"
+  fi
+
+  if [[ -f "$STEAM_SCRIPT" ]]; then
+    echo -e "NOTE: Steam script already exists - Skipping"
+  else
+    echo "#!/bin/bash" > "$STEAM_SCRIPT"
+    echo "moonlight stream -1080 -fps 60 -app Steam" >> "$STEAM_SCRIPT"
+  fi
+
+  echo -e "Make Scripts Executable"
+  chmod +x "$DESKTOP_SCRIPT"
+  chmod +x "$STEAM_SCRIPT"
+
+  echo -e "Update Permissions"
+  echo -e "Changing File Permissions"
+  chown -R pi:pi "$SCRIPT_DIR"
+
+  echo -e "****************************************************\n"
+}
+
+# Install Moonlight package
+install_moonlight() {
+  echo -e "\nUpdate System"
+  echo -e "*************\n"
+
+  apt-get update -y
+  apt-get install moonlight-embedded -y
+
+  echo -e "*************\n"
+}
+
+# Pair Moonlight with PC
+pair_moonlight() {
+  echo -e "\nPair Moonlight with PC"
+  echo -e "**********************\n"
+
+  echo -e "Once you have input your PC's IP Address below, you will be given a PIN"
+  echo -e "Input this on the PC to pair with Moonlight. \n"
+  read -p "Input STEAM PC's IP Address here :`echo $'\n> '`" ip
+  sudo -u pi moonlight pair $ip
+
+  echo -e "**********************\n"
+}
+
+# Remove all Steam launch scripts
+remove_scripts() {
+  echo -e "\nRemove All Steam Launch Scripts"
+  echo -e "*******************************\n"
+
+  cd "$SCRIPT_DIR"
+  rm -f "$DESKTOP_SCRIPT"
+  rm -f "$STEAM_SCRIPT"
+
+  echo -e "*******************************\n"
+}
+
+# Update the script itself
+self_update() {
+  echo -e "\nUpdate Moonlight RetroPie"
+  echo -e "*****************************\n"
+
+  if [[ -f "/home/pi/moonlight.sh" ]]; then
+    echo -e "Removing old script"
+    rm "/home/pi/moonlight.sh"
+  fi
+
+  wget "https://github.com/danielproctor31/moonlight-retropie/blob/master/moonlight.sh" --no-check-certificate -O "/home/pi/moonlight.sh"
+  chown pi:pi "/home/pi/moonlight.sh"
+  chmod +x "/home/pi/moonlight.sh"
+
+  echo -e "*****************************\n"
+
+  exec /home/pi/moonlight.sh
+}
+
+# Uninstall Moonlight and associated files
+uninstall() {
+  echo -e "\nUninstalling Everything"
+  echo -e "***********************\n"
+
+  rm -f "/usr/share/keyrings/moonlight-game-streaming-moonlight-embedded-archive-keyring.gpg"
+  rm -f "/etc/apt/trusted.gpg.d/moonlight-game-streaming-moonlight-embedded.gpg"
+  rm -f "$REPO_FILE"
+
+  apt-get update -y
+  apt-get purge moonlight-embedded -y
+
+  echo -e "***********************\n"
+}
+
+# Main menu
+main_menu() {
+  echo -e "\n******************************************************"
+  echo -e "Welcome to the Moonlight Installer Script for RetroPie"
+  echo -e "******************************************************\n"
+  echo -e "Select an option:"
+  echo -e " * 1: Install"
+  echo -e " * 2: Re-Pair with PC"
+  echo -e " * 3: Update"
+  echo -e " * 4: Uninstall"
+  echo -e " * 5: Exit"
+
+  read -r NUM
+  case $NUM in
+    1)
+      add_repository
+      install_moonlight
+      pair_moonlight
+      create_scripts
+	  main_menu
+      ;;
+    2)
+      pair_moonlight
+      main_menu
+      ;;
+    3)
+      install_moonlight
+	  self_update
+	  main_menu
+      ;;
+    4)
+      uninstall
+	  remove_scripts
+	  main_menu
+      ;;
+    5)
+      exit 0
+      ;;
+    *)
+      echo "INVALID NUMBER!"
+      ;;
+  esac
+}
+
+# Main script execution
+main_menu
