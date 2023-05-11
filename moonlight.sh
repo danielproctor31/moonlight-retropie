@@ -143,46 +143,52 @@ main_menu() {
   echo -e "Welcome to the Moonlight Installer Script for RetroPie"
   echo -e "******************************************************\n"
   echo -e "Select an option:"
-  echo -e " * 1: Install"
-  echo -e " * 2: Create Scripts"
-  echo -e " * 3: Remove Scripts"
-  echo -e " * 4: Re-Pair with PC"
-  echo -e " * 5: Update"
-  echo -e " * 6: Uninstall"
-  echo -e " * 7: Exit"
+  echo -e " * 1: Install Moonlight, Create Scripts and Pair with PC"
+  echo -e " * 2: Install Moonlight"
+  echo -e " * 3: Create Scripts"
+  echo -e " * 4: Remove Scripts"
+  echo -e " * 5: Re-Pair with PC"
+  echo -e " * 6: Update"
+  echo -e " * 7: Uninstall"
+  echo -e " * 8: Exit"
 
   read -r NUM
   case $NUM in
     1)
       add_repository
       install_moonlight
-      pair_moonlight
       create_scripts
+      pair_moonlight
       main_menu
       ;;
-    2)
-      create_scripts
+    2)  
+      add_repository
+      install_moonlight
       main_menu
       ;;
     3)
-      remove_scripts
+      create_scripts
       main_menu
       ;;
     4)
-      pair_moonlight
+      remove_scripts
       main_menu
       ;;
     5)
+      pair_moonlight
+      main_menu
+      ;;
+    6)
       install_moonlight
 	    self_update
 	    main_menu
       ;;
-    6)
+    7)
       uninstall
 	    remove_scripts
 	    main_menu
       ;;
-    7)
+    8)
       exit 0
       ;;
     *)
