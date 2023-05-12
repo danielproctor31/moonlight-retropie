@@ -69,6 +69,21 @@ install_moonlight() {
   echo -e "\nInstalling Moonlight"
   echo -e "************************\n"
 
+  if command_exists moonlight; then
+    echo -e "NOTE: Moonlight already installed - Skipping"
+  else
+    apt-get update -y
+    apt-get install moonlight-embedded -y
+  fi
+
+  echo -e "\n************************\n"
+}
+
+# Update Moonlight package
+update_moonlight() {
+  echo -e "\nUpdating Moonlight"
+  echo -e "************************\n"
+
   apt-get update -y
   apt-get install moonlight-embedded -y
 
@@ -177,7 +192,7 @@ main_menu() {
       main_menu
       ;;
     6)
-      install_moonlight
+      update_moonlight
       self_update
       main_menu
       ;;
