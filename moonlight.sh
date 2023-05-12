@@ -3,9 +3,9 @@ set -e
 
 # Variables
 REPO_FILE="/etc/apt/sources.list.d/moonlight-game-streaming-moonlight-embedded.list"
-SCRIPT_DIR="/home/pi/RetroPie/roms/ports"
-DESKTOP_SCRIPT="$SCRIPT_DIR/Desktop.sh"
-STEAM_SCRIPT="$SCRIPT_DIR/Steam.sh"
+PORTS_DIR="/home/pi/RetroPie/roms/ports"
+DESKTOP_SCRIPT="$PORTS_DIR/Moonlight-Desktop.sh"
+STEAM_SCRIPT="$PORTS_DIR/Moonlight-Steam.sh"
 
 # Functions
 
@@ -35,8 +35,7 @@ create_scripts() {
   echo -e "\n****************************************************\n"
 
   echo -e "Create Ports Folder"
-  mkdir -p "$SCRIPT_DIR"
-  cd "$SCRIPT_DIR"
+  mkdir -p "$PORTS_DIR"
 
   echo -e "Create Scripts"
 
@@ -60,7 +59,7 @@ create_scripts() {
 
   echo -e "Update Permissions"
   echo -e "Changing File Permissions"
-  chown -R pi:pi "$SCRIPT_DIR"
+  chown -R pi:pi "$PORTS_DIR"
 
   echo -e "\n****************************************************\n"
 }
@@ -91,14 +90,13 @@ pair_moonlight() {
 
 # Remove all Steam launch scripts
 remove_scripts() {
-  echo -e "\nRemove All Steam Launch Scripts"
+  echo -e "\nRemove All Launch Scripts"
   echo -e "*******************************\n"
 
-  echo -e "Removing Scripts"
-  cd "$SCRIPT_DIR"
   rm -f "$DESKTOP_SCRIPT"
   rm -f "$STEAM_SCRIPT"
-
+  
+  echo -e "\nRemoved Scripts"
   echo -e "\n*******************************\n"
 }
 
