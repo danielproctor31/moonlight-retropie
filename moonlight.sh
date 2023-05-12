@@ -19,7 +19,7 @@ add_repository() {
   echo -e "\nAdding Moonlight Repository"
   echo -e "***************************\n"
 
-  if [[ -f "$REPO_FILE" ]]; then
+  if [ -f "$REPO_FILE" ]; then
     echo -e "NOTE: Moonlight repository already exists - Skipping"
   else
     echo -e "Adding Moonlight to repository"
@@ -180,13 +180,13 @@ main_menu() {
       ;;
     6)
       install_moonlight
-	    self_update
-	    main_menu
+      self_update
+      main_menu
       ;;
     7)
       uninstall
-	    remove_scripts
-	    main_menu
+      remove_scripts
+      main_menu
       ;;
     8)
       exit 0
@@ -198,4 +198,11 @@ main_menu() {
 }
 
 # Main script execution
+
+# elevate with sudo if not already root
+if [ $EUID != 0 ]; then
+    sudo "$0" "$@"
+    exit $?
+fi
+
 main_menu
